@@ -18,6 +18,7 @@
 #include <mutex>
 #include <string>
 #include <tuple>
+#include <experimental/filesystem>
 
 namespace spdlog {
 namespace sinks {
@@ -153,12 +154,10 @@ SPDLOG_INLINE void rotating_file_sink<Mutex>::rotate_() {
             // rates can cause the rename to fail with permission denied (because of antivirus?).
             details::os::sleep_for_millis(100);
             if (!rename_file_(src, target)) {
+                std::experimental::filesystem::copy(src, target);
                 file_helper_.reopen(
                     true);  // truncate the log file anyway to prevent it to grow beyond its limit!
                 current_size_ = 0;
-                throw_spdlog_ex("rotating_file_sink: failed renaming " + filename_to_str(src) +
-                                    " to " + filename_to_str(target),
-                                errno);
             }
         }
     }
