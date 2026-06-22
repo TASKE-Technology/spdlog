@@ -18,7 +18,16 @@
 #include <mutex>
 #include <string>
 #include <tuple>
+
+#if __has_include(<experimental/filesystem>)
 #include <experimental/filesystem>
+namespace _fs = std::experimental::filesystem;
+#elif __has_include(<filesystem>)
+#include <filesystem>
+namespace _fs = std::filesystem;
+#else
+#error "No filesystem support available"
+#endif#endif
 
 namespace spdlog {
 namespace sinks {
@@ -154,7 +163,7 @@ SPDLOG_INLINE void rotating_file_sink<Mutex>::rotate_() {
             // rates can cause the rename to fail with permission denied (because of antivirus?).
             details::os::sleep_for_millis(100);
             if (!rename_file_(src, target)) {
-                std::experimental::filesystem::copy(src, target);
+                _fs::copy(src, target);
                 file_helper_.reopen(
                     true);  // truncate the log file anyway to prevent it to grow beyond its limit!
                 current_size_ = 0;
